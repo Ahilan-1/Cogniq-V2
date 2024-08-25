@@ -36,7 +36,7 @@ ERROR_PHRASES = [
     "Access Denied", "No useful summary available", "Your access to the NCBI website",
     "possible misuse/abuse situation", "has been temporarily blocked", "is not an indication of a security issue",
     "a run away script", "to restore access", "please have your system administrator contact",
-    "Log In", "Continue with phone number", "Email or username", "Password", "Forgot password"
+    "Log In", "Continue with phone number", "Email or username", "Password", "Forgot password","cookies","Accept","Cookie Settings"
 ]
 
 @lru_cache(maxsize=128)
