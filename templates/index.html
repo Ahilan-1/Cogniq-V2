@@ -8,7 +8,7 @@
     <style>
         body {
             font-family: 'Roboto', sans-serif;
-            background-color: #fff;
+            background-color: #f5f5f5;
             color: #333;
             margin: 0;
             padding: 0;
@@ -20,7 +20,7 @@
 
         .search-container {
             width: 100%;
-            max-width: 800px;
+            max-width: 600px;
             text-align: center;
             position: relative;
             padding: 20px;
@@ -29,28 +29,33 @@
         .search-container h1 {
             font-size: 2.5em;
             margin-bottom: 20px;
+            color: #333;
+            font-weight: 700;
         }
 
         .search-form {
             display: flex;
-            flex-direction: column;
             align-items: center;
             border: 1px solid #ddd;
             border-radius: 50px;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            background-color: white;
+            padding: 5px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
             overflow: hidden;
         }
 
         .search-form input[type="text"] {
-            width: 100%;
+            flex-grow: 1;
             padding: 15px 20px;
             border: none;
             outline: none;
             font-size: 16px;
+            border-radius: 50px;
+            background-color: transparent;
         }
 
         .search-form button {
-            padding: 10px 20px;
+            padding: 12px 25px;
             background-color: #0073e6;
             color: white;
             border: none;
@@ -58,7 +63,6 @@
             font-size: 16px;
             border-radius: 25px;
             transition: background-color 0.3s;
-            margin-top: 10px;
         }
 
         .search-form button:hover {
@@ -68,13 +72,13 @@
         /* Autocomplete suggestions styles */
         .autocomplete-suggestions {
             position: absolute;
-            top: 100%;
+            top: 110%;
             left: 0;
             right: 0;
             background-color: white;
             border: 1px solid #ddd;
             border-radius: 4px;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
             max-height: 200px;
             overflow-y: auto;
             z-index: 1000;
@@ -83,6 +87,7 @@
         .autocomplete-suggestion {
             padding: 10px 20px;
             cursor: pointer;
+            color: #333;
         }
 
         .autocomplete-suggestion:hover {
@@ -91,17 +96,11 @@
 
         @media (min-width: 768px) {
             .search-form {
-                flex-direction: row;
-            }
-
-            .search-form input[type="text"] {
-                width: auto;
-                flex-grow: 1;
+                padding: 5px 10px;
             }
 
             .search-form button {
-                margin-left: 10px;
-                border-radius: 0;
+                padding: 12px 30px;
             }
         }
     </style>
