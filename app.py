@@ -36,7 +36,7 @@ ERROR_PHRASES = [
     "Access Denied", "No useful summary available", "Your access to the NCBI website",
     "possible misuse/abuse situation", "has been temporarily blocked", "is not an indication of a security issue",
     "a run away script", "to restore access", "please have your system administrator contact",
-    "Log In", "Continue with phone number", "Email or username", "Password", "Forgot password","cookies","Accept","Cookie Settings"
+    "Log In", "Continue with phone number", "Email or username", "you agree to our Terms of Service", "Cookie Policy, Privacy Policy and Content Policies." "Password", "Forgot password","cookies","Accept","Cookie Settings"
 ]
 
 @lru_cache(maxsize=128)
@@ -78,6 +78,14 @@ async def fetch_article(url, session):
 def is_valid_summary(summary):
     return not any(phrase in summary for phrase in ERROR_PHRASES)
 
+def clean_summary(summary):
+    """
+    This function removes any unwanted phrases from the summary after it has been generated.
+    """
+    for phrase in ERROR_PHRASES:
+        summary = summary.replace(phrase, "")
+    return summary.strip()
+
 async def fetch_and_summarize(url, session):
     try:
         video_id = extract_youtube_video_id(url)
@@ -86,6 +94,7 @@ async def fetch_and_summarize(url, session):
             transcript = YouTubeTranscriptApi.get_transcript(video_id)
             text = ' '.join([entry['text'] for entry in transcript])
             summary = summarizer(text, max_length=130, min_length=30, do_sample=False)[0]['summary_text']
+            summary = clean_summary(summary)  # Clean the summary before returning it
             if is_valid_summary(summary):
                 return summary
         else:
@@ -94,8 +103,9 @@ async def fetch_and_summarize(url, session):
             article.download()
             article.parse()
             article.nlp()
-            if is_valid_summary(article.summary):
-                return article.summary
+            summary = clean_summary(article.summary)  # Clean the summary before returning it
+            if is_valid_summary(summary):
+                return summary
     except Exception as e:
         logger.error(f"Error processing {url}: {e}")
         try:
@@ -104,6 +114,7 @@ async def fetch_and_summarize(url, session):
             paragraphs = soup.find_all('p')
             text = ' '.join([para.get_text() for para in paragraphs[:5]])
             summary = summarizer(text, max_length=130, min_length=30, do_sample=False)[0]['summary_text']
+            summary = clean_summary(summary)  # Clean the summary before returning it
             if is_valid_summary(summary):
                 return summary
         except Exception as e:
@@ -150,15 +161,23 @@ async def search(request: Request, query: str = Form(...)):
             "google_combined_summary": Markup(google_combined_summary),
         })
 
+import json
+
 @app.get("/suggestions", response_class=JSONResponse)
 async def get_suggestions(query: str):
     url = f"http://suggestqueries.google.com/complete/search?client=firefox&q={query}"
     async with aiohttp.ClientSession() as session:
         async with session.get(url) as response:
             if response.status == 200:
-                data = await response.json()
-                return data[1]
+                text = await response.text()  # Read the response as plain text
+                try:
+                    data = json.loads(text)  # Parse the text as JSON
+                    return data[1]  # Return the suggestions list
+                except json.JSONDecodeError:
+                    logger.error(f"Failed to parse suggestions for query: {query}")
+                    return []
     return []
+
 
 if __name__ == '__main__':
     import uvicorn
