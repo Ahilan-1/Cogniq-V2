@@ -23,6 +23,7 @@
             max-width: 800px;
             text-align: center;
             position: relative;
+            padding: 20px;
         }
 
         .search-container h1 {
@@ -32,7 +33,8 @@
 
         .search-form {
             display: flex;
-            align-items: top;
+            flex-direction: column;
+            align-items: center;
             border: 1px solid #ddd;
             border-radius: 50px;
             box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
@@ -40,7 +42,7 @@
         }
 
         .search-form input[type="text"] {
-            flex-grow: 1;
+            width: 100%;
             padding: 15px 20px;
             border: none;
             outline: none;
@@ -48,12 +50,15 @@
         }
 
         .search-form button {
-            padding: 15px 20px;
+            padding: 10px 20px;
             background-color: #0073e6;
             color: white;
             border: none;
             cursor: pointer;
+            font-size: 16px;
+            border-radius: 25px;
             transition: background-color 0.3s;
+            margin-top: 10px;
         }
 
         .search-form button:hover {
@@ -83,11 +88,27 @@
         .autocomplete-suggestion:hover {
             background-color: #f1f1f1;
         }
+
+        @media (min-width: 768px) {
+            .search-form {
+                flex-direction: row;
+            }
+
+            .search-form input[type="text"] {
+                width: auto;
+                flex-grow: 1;
+            }
+
+            .search-form button {
+                margin-left: 10px;
+                border-radius: 0;
+            }
+        }
     </style>
 </head>
 <body>
     <div class="search-container">
-        <h1>CogniQ 2</h1>
+        <h1>CogniQ</h1>
         <form method="POST" action="/search" class="search-form">
             <input type="text" name="query" id="search-input" placeholder="What are you searching for?" required>
             <button type="submit">Search</button>
