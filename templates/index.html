@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CogniQ 3</title>
+    <title>CogniQ</title>
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;700&display=swap" rel="stylesheet">
     <style>
         body {
@@ -122,7 +122,7 @@
 
         // Function to fetch suggestions from the server
         async function fetchSuggestions(query) {
-            const response = await fetch(/suggestions?query=${query});
+            const response = await fetch(`/suggestions?query=${query}`);
             const suggestions = await response.json();
             return suggestions;
         }
