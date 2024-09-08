@@ -25,7 +25,6 @@
             padding: 20px;
             background-color: #1a1a1a;
             border-radius: 12px;
-            box-shadow: 0 4px 10px rgba(255, 255, 255, 0.1);
         }
 
         .search-container h1 {
@@ -33,8 +32,6 @@
             margin-bottom: 20px;
             font-weight: 400;
             color: #ffffff;
-            border-bottom: 2px solid #ffffff;
-            padding-bottom: 10px;
         }
 
         .search-form {
@@ -43,7 +40,6 @@
             align-items: center;
             border-radius: 50px;
             overflow: hidden;
-            box-shadow: 0 2px 5px rgba(255, 255, 255, 0.1);
             width: 100%;
             max-width: 600px;
             margin: auto;
@@ -55,15 +51,9 @@
             border: none;
             outline: none;
             font-size: 18px;
-            border-radius: 25px;
             background-color: #333;
             color: #fff;
-            box-shadow: 0 2px 4px rgba(255, 255, 255, 0.1);
-            transition: box-shadow 0.2s ease-in-out;
-        }
-
-        .search-form input[type="text"]:focus {
-            box-shadow: 0 2px 8px rgba(255, 255, 255, 0.3);
+            border-radius: 25px;
         }
 
         .search-form button {
@@ -74,13 +64,7 @@
             cursor: pointer;
             font-size: 16px;
             border-radius: 25px;
-            transition: background-color 0.3s;
             margin-top: 15px;
-            box-shadow: 0 2px 4px rgba(255, 255, 255, 0.1);
-        }
-
-        .search-form button:hover {
-            background-color: #e0e0e0;
         }
 
         /* Autocomplete suggestions styles */
@@ -92,7 +76,6 @@
             background-color: #1a1a1a;
             border: 1px solid #333;
             border-radius: 4px;
-            box-shadow: 0 2px 4px rgba(255, 255, 255, 0.1);
             max-height: 200px;
             overflow-y: auto;
             z-index: 1000;
@@ -124,26 +107,14 @@
                 border-radius: 0 50px 50px 0;
             }
         }
-
-        /* Subtle Indian motif in the background */
-        body::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: url('https://example.com/indian-motif.png') repeat;
-            opacity: 0.05;
-        }
     </style>
 </head>
 <body>
     <div class="search-container">
         <h1>CogniQ</h1>
         <form method="POST" action="/search" class="search-form">
-            <input type="text" name="query" id="search-input" placeholder="आप क्या ढूंढ रहे हैं?" required>
-            <button type="submit">खोजें</button>
+            <input type="text" name="query" id="search-input" placeholder="What are you searching for?" required>
+            <button type="submit">Search</button>
         </form>
         <div id="autocomplete-container" class="autocomplete-suggestions"></div>
     </div>
