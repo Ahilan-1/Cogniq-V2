@@ -119,13 +119,13 @@
         <div id="autocomplete-container" class="autocomplete-suggestions"></div>
     </div>
 
-    <script>
+   <script>
         const searchInput = document.getElementById('search-input');
         const autocompleteContainer = document.getElementById('autocomplete-container');
 
         // Function to fetch suggestions from the server
         async function fetchSuggestions(query) {
-            const response = await fetch(`/suggestions?query=${query}`);
+            const response = await fetch(/suggestions?query=${query});
             const suggestions = await response.json();
             return suggestions;
         }
