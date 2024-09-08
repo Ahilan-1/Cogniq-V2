@@ -49,6 +49,7 @@ templates = Jinja2Templates(directory="templates")
 # Summarization pipeline
 summarizer = pipeline("summarization", model="facebook/bart-large-cnn", clean_up_tokenization_spaces=True)
 
+
 ERROR_PHRASES = [
     "Access Denied", "No useful summary available", "Your access to the NCBI website",
     "possible misuse/abuse situation", "has been temporarily blocked", "is not an indication of a security issue",
