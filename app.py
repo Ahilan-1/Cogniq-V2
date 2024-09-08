@@ -35,7 +35,7 @@ MIN_SUMMARIES = 5
 # Initialize the FastAPI app
 app = FastAPI()
 
-# Add CORS Middleware
+# Add CORS Middleware to allow cross-origin access
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],  # In production, replace with specific domain(s)
@@ -57,6 +57,7 @@ ERROR_PHRASES = [
     "Cookie Policy", "Privacy Policy", "Content Policies.", "Password", "Forgot password", "cookies", "Accept", "Cookie Settings"
 ]
 
+# Function to perform Google search and fetch results
 @lru_cache(maxsize=128)
 async def google_search(query, session):
     url = f"https://www.google.com/search?q={query.replace(' ', '+')}"
@@ -66,6 +67,7 @@ async def google_search(query, session):
     async with session.get(url, headers=headers) as response:
         return await response.text()
 
+# Function to parse Google search results
 def parse_search_results(html):
     soup = BeautifulSoup(html, 'html.parser')
     results = []
@@ -76,6 +78,7 @@ def parse_search_results(html):
         results.append({'title': title, 'link': link, 'snippet': snippet})
     return results
 
+# Function to extract YouTube video ID
 def extract_youtube_video_id(url):
     youtube_regex = (
         r'(https?://)?(www\.)?(youtube|youtu|youtube-nocookie)\.(com|be)/'
@@ -85,6 +88,7 @@ def extract_youtube_video_id(url):
         return youtube_match.group(6)
     return None
 
+# Function to fetch an article
 @retry(stop_max_attempt_number=3, wait_fixed=1000)
 async def fetch_article(url, session):
     async with session.get(url, timeout=10) as response:
@@ -93,22 +97,18 @@ async def fetch_article(url, session):
         else:
             response.raise_for_status()
 
+# Check if the summary is valid
 def is_valid_summary(summary):
     return not any(phrase in summary for phrase in ERROR_PHRASES)
 
-def clean_summary(summary):
-    for phrase in ERROR_PHRASES:
-        summary = summary.replace(phrase, "")
-    return summary.strip()
-
+# Fetch and summarize the article
 async def fetch_and_summarize(url, session):
     try:
         video_id = extract_youtube_video_id(url)
         if video_id:
             transcript = YouTubeTranscriptApi.get_transcript(video_id)
             text = ' '.join([entry['text'] for entry in transcript])
-            summary = summarizer(text, max_length=130, min_length=30, do_sample=False, clean_up_tokenization_spaces=True)[0]['summary_text']
-            summary = clean_summary(summary)
+            summary = summarizer(text, max_length=130, min_length=30, do_sample=False)[0]['summary_text']
             if is_valid_summary(summary):
                 return summary
         else:
@@ -116,73 +116,38 @@ async def fetch_and_summarize(url, session):
             article.download()
             article.parse()
             article.nlp()
-            summary = clean_summary(article.summary)
-            if is_valid_summary(summary):
-                return summary
+            if is_valid_summary(article.summary):
+                return article.summary
     except Exception as e:
         logger.error(f"Error processing {url}: {e}")
-        try:
-            html = await fetch_article(url, session)
-            soup = BeautifulSoup(html, 'html.parser')
-            paragraphs = soup.find_all('p')
-            text = ' '.join([para.get_text() for para in paragraphs[:5]])
-            summary = summarizer(text, max_length=130, min_length=30, do_sample=False, clean_up_tokenization_spaces=True)[0]['summary_text']
-            summary = clean_summary(summary)
-            if is_valid_summary(summary):
-                return summary
-        except Exception as e:
-            logger.error(f"Error fetching summary for {url}: {e}")
-            return None
+        return None
 
-def create_bullet_point_summary(text):
-    sentences = sent_tokenize(text)
-    bullet_points = '\n'.join([f"• {sentence}" for sentence in sentences])
-    return bullet_points
-
-def combine_summaries(summaries):
-    combined_text = " ".join(summaries)
-    if combined_text:
-        return create_bullet_point_summary(combined_text)
-    return "No useful summary available."
-
-def filter_results(results):
-    return [result for result in results if not any(phrase in result['snippet'] for phrase in ERROR_PHRASES)]
-
-@app.get("/", response_class=HTMLResponse)
-async def index(request: Request):
-    logger.debug(f"Received request: {request.url}")
-    return templates.TemplateResponse("index.html", {"request": request})
-
+# Handle search request
 @app.post("/search", response_class=HTMLResponse)
 async def search(request: Request, query: str = Form(...)):
-    logger.debug(f"Received search request: {request.url}, Query: {query}")
+    logger.debug(f"Search query: {query}")
     async with aiohttp.ClientSession() as session:
-        try:
-            google_html = await google_search(query, session)
-            google_results = parse_search_results(google_html)
-            google_results = filter_results(google_results)
+        google_html = await google_search(query, session)
+        google_results = parse_search_results(google_html)
 
-            google_summaries = await asyncio.gather(*[fetch_and_summarize(result['link'], session) for result in google_results])
-            google_summaries = [summary for summary in google_summaries if summary]
+        summaries = await asyncio.gather(*[fetch_and_summarize(result['link'], session) for result in google_results])
+        summaries = [summary for summary in summaries if summary]
 
-            if len(google_summaries) >= MIN_SUMMARIES:
-                google_combined_summary = combine_summaries(google_summaries)
-            else:
-                google_combined_summary = "No useful summary available."
+        combined_summary = "No useful summary available."
+        if summaries:
+            combined_summary = " ".join(summaries)
 
-            return templates.TemplateResponse("result.html", {
-                "request": request,
-                "query": query,
-                "google_results": google_results,
-                "google_combined_summary": Markup(google_combined_summary),
-            })
-        except Exception as e:
-            logger.error(f"Error in search: {str(e)}")
-            raise HTTPException(status_code=500, detail="An error occurred during the search process")
+        return templates.TemplateResponse("result.html", {
+            "request": request,
+            "query": query,
+            "google_results": google_results,
+            "combined_summary": Markup(combined_summary),
+        })
 
+# Handle suggestions request
 @app.get("/suggestions", response_class=JSONResponse)
 async def get_suggestions(query: str):
-    logger.debug(f"Received suggestions request for query: {query}")
+    logger.debug(f"Suggestions query: {query}")
     url = f"http://suggestqueries.google.com/complete/search?client=firefox&q={query}"
     async with aiohttp.ClientSession() as session:
         async with session.get(url) as response:
@@ -196,6 +161,7 @@ async def get_suggestions(query: str):
                     return []
     return []
 
+# Exception handler for HTTPException
 @app.exception_handler(HTTPException)
 async def http_exception_handler(request, exc):
     return JSONResponse(
@@ -203,13 +169,7 @@ async def http_exception_handler(request, exc):
         content={"message": f"HTTP error occurred: {exc.detail}"},
     )
 
-@app.exception_handler(RequestValidationError)
-async def validation_exception_handler(request, exc):
-    return JSONResponse(
-        status_code=422,
-        content={"message": f"Validation error: {exc}"},
-    )
-
+# Exception handler for general exceptions
 @app.exception_handler(Exception)
 async def general_exception_handler(request, exc):
     logger.error(f"Unexpected error: {str(exc)}")
@@ -218,6 +178,7 @@ async def general_exception_handler(request, exc):
         content={"message": f"An unexpected error occurred: {str(exc)}"},
     )
 
+# Run the FastAPI app
 if __name__ == '__main__':
     import uvicorn
     uvicorn.run("app:app", host="0.0.0.0", port=8000, reload=True)
