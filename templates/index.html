@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CogniQ 3</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Roboto', sans-serif;
+            background-color: #fff;
+            color: #333;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+
+        .search-container {
+            width: 100%;
+            max-width: 800px;
+            text-align: center;
+            position: relative;
+        }
+
+        .search-container h1 {
+            font-size: 2.5em;
+            margin-bottom: 20px;
+        }
+
+        .search-form {
+            display: flex;
+            align-items: top;
+            border: 1px solid #ddd;
+            border-radius: 50px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+
+        .search-form input[type="text"] {
+            flex-grow: 1;
+            padding: 15px 20px;
+            border: none;
+            outline: none;
+            font-size: 16px;
+        }
+
+        .search-form button {
+            padding: 15px 20px;
+            background-color: #0073e6;
+            color: white;
+            border: none;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        .search-form button:hover {
+            background-color: #005bb5;
+        }
+
+        /* Autocomplete suggestions styles */
+        .autocomplete-suggestions {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background-color: white;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            max-height: 200px;
+            overflow-y: auto;
+            z-index: 1000;
+        }
+
+        .autocomplete-suggestion {
+            padding: 10px 20px;
+            cursor: pointer;
+        }
+
+        .autocomplete-suggestion:hover {
+            background-color: #f1f1f1;
+        }
+    </style>
+</head>
+<body>
+    <div class="search-container">
+        <h1>CogniQ 2</h1>
+        <form method="POST" action="/search" class="search-form">
+            <input type="text" name="query" id="search-input" placeholder="What are you searching for?" required>
+            <button type="submit">Search</button>
+        </form>
+        <div id="autocomplete-container" class="autocomplete-suggestions"></div>
+    </div>
+
+    <script>
+        const searchInput = document.getElementById('search-input');
+        const autocompleteContainer = document.getElementById('autocomplete-container');
+
+        // Function to fetch suggestions from the server
+        async function fetchSuggestions(query) {
+            const response = await fetch(`/suggestions?query=${query}`);
+            const suggestions = await response.json();
+            return suggestions;
+        }
+
+        // Function to display suggestions
+        function displaySuggestions(suggestions) {
+            autocompleteContainer.innerHTML = ''; // Clear previous suggestions
+            suggestions.forEach(suggestion => {
+                const suggestionElement = document.createElement('div');
+                suggestionElement.classList.add('autocomplete-suggestion');
+                suggestionElement.textContent = suggestion;
+                suggestionElement.addEventListener('click', () => {
+                    searchInput.value = suggestion; // Set the clicked suggestion in the input field
+                    autocompleteContainer.innerHTML = ''; // Clear suggestions
+                });
+                autocompleteContainer.appendChild(suggestionElement);
+            });
+        }
+
+        // Add event listener for the input field
+        searchInput.addEventListener('input', async () => {
+            const query = searchInput.value;
+            if (query.length > 2) { // Fetch suggestions only if the query is longer than 2 characters
+                const suggestions = await fetchSuggestions(query);
+                displaySuggestions(suggestions);
+            } else {
+                autocompleteContainer.innerHTML = ''; // Clear suggestions if input is too short
+            }
+        });
+
+        // Hide autocomplete suggestions when clicking outside
+        document.addEventListener('click', function(event) {
+            if (!autocompleteContainer.contains(event.target) && event.target !== searchInput) {
+                autocompleteContainer.innerHTML = ''; // Clear suggestions
+            }
+        });
+    </script>
+</body>
+</html>
