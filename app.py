@@ -47,7 +47,7 @@ app.add_middleware(
 templates = Jinja2Templates(directory="templates")
 
 # Summarization pipeline
-summarizer = pipeline("summarization", model="facebook/bart-large-cnn")
+summarizer = pipeline("summarization", model="facebook/bart-large-cnn", clean_up_tokenization_spaces=True)
 
 ERROR_PHRASES = [
     "Access Denied", "No useful summary available", "Your access to the NCBI website",
@@ -107,7 +107,7 @@ async def fetch_and_summarize(url, session):
         if video_id:
             transcript = YouTubeTranscriptApi.get_transcript(video_id)
             text = ' '.join([entry['text'] for entry in transcript])
-            summary = summarizer(text, max_length=130, min_length=30, do_sample=False)[0]['summary_text']
+            summary = summarizer(text, max_length=130, min_length=30, do_sample=False, clean_up_tokenization_spaces=True)[0]['summary_text']
             summary = clean_summary(summary)
             if is_valid_summary(summary):
                 return summary
@@ -126,7 +126,7 @@ async def fetch_and_summarize(url, session):
             soup = BeautifulSoup(html, 'html.parser')
             paragraphs = soup.find_all('p')
             text = ' '.join([para.get_text() for para in paragraphs[:5]])
-            summary = summarizer(text, max_length=130, min_length=30, do_sample=False)[0]['summary_text']
+            summary = summarizer(text, max_length=130, min_length=30, do_sample=False, clean_up_tokenization_spaces=True)[0]['summary_text']
             summary = clean_summary(summary)
             if is_valid_summary(summary):
                 return summary
